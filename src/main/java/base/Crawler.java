@@ -1,61 +1,102 @@
 package base;
 
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
+
 public class Crawler {
 	
-	public static Queue<String> kju = new LinkedList<>();
+	public static Queue<Element> kju = new LinkedList<>();
 	public static Set<String> marked = new HashSet<>();
 	public static String regex = "/wiki/(.+?)\"";
+	public static int id;
+	public static int temp_id;
+	
+	
+	public static List<Element> unique = new ArrayList<Element>();
 	
 	public static void main(String[] args) 
 	{
-			utils.SaveTest.kreiraj();
-			
-			
+			//utils.SaveTest.kreiraj();
 			MongoConnect mongo = new MongoConnect();
-			
-			
-			//String html = base.Scrapper.daj_html("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0");
-			algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0");
-			//System.out.println(html);
-			
-		
+			algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
 			
 		
 	}
 	
 	
 	
-public static void algoritam(String root) 
-{
-
-	kju.add(root);
+	public static void algoritam(String root) 
+	{
+	
+	Element start = new Element(root); //inicijalizacija roota
+	start.setRbr(id); //pripadnost ostaje na -1 jer od root-a se krece
+	id++; 
+	unique.add(start);
+	
+	kju.add(start);
 	while(!kju.isEmpty())
 	{
 		
-		String crawledURL = kju.poll();
-		System.out.println("* * * Iskrolovana stranica : " + crawledURL);
-		if(marked.size()>1000)
+		/*
+		
+		boolean upisuj = true;
+		
+		
+		// provera
+		boolean spreman = false;
+		while(!spreman)
 		{
-			System.out.println("Gasi majstore, count memorisanih > 1000, cackaj na liniji 47.");
-			return;
+			Element curr = kju.poll();
+			String crawledURL = curr.getURL(); 
+			for(int i = 0;i<unique.size();i++)
+			{
+				if(crawledURL.equals(unique.get(i).getURL()))
+				{
+					curr.setRbr(unique.get(i).getRbr());
+					upisuj = false; 	//ne upisuj, uzima se sledeci iz kju-a
+					break;
+				}
+			}
+			if(upisuj)
+			{
+				// dodela novog id-a
+				//upis
+				//ubacivanje u unique
+				spreman = true;
+			}
 		}
 		
+		*/
+		
+		Element curr = kju.poll();
+		String crawledURL = curr.getURL(); 				
+		
+		System.out.println("* * * Kroluje se stranica : " + crawledURL + ", izronjena iz " + Integer.toString(curr.getPripadnost()));
+
+		
+		
 		String html = null;
-		boolean kraj = false; //kraj trazenja prvog valjanog u kju u u uu 
+		String naziv = null;
+		String opis = null;
+		
+		/*	boolean kraj = false; //kraj trazenja prvog valjanog u kju 
 		
 		while(!kraj)
 		{
-			if(( html = base.Scrapper.daj_html(crawledURL))==null)
+			if(( html = base.Scrapper.daj_html(crawledURL))==null ) // preuzimanje html-a
 			{
 				System.out.println("! Ne valjda link : " + crawledURL);
-				crawledURL = kju.poll();
+				curr = kju.poll();
+				crawledURL = curr.getURL(); 	
 				kraj = false;
 			}
 			else
@@ -63,105 +104,97 @@ public static void algoritam(String root)
 				kraj = true; // :)
 			}
 		}
-
+		*/
 		
-		//System.out.println(html);
+		String retval[];
+		retval = base.Scrapper.daj_html(crawledURL);
+		curr.setNaziv(retval[0]);
+		curr.setOpis(retval[1]);
+		
+		
+		
+
+		html = retval[2];
+		
+		if(html==null)
+		{
+			curr.saveElement();
+			continue;
+		}
+		
 		
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(html);
-		while(matcher.find())
+		
+		while(matcher.find())  // trazenje linkova iz elementa curr, dodavanje istih na kraj 
 		{
 			
 			String w = matcher.group();
-			String adresa = "https://sr.wikipedia.org" + w.substring(0, w.length()-1); //secenje " title dela
+			String adresa = "https://sr.wikipedia.org" + w.substring(0, w.length()-1); //secenje " karaktera zbog nacina definisanja regex-a
 
+			if(adresa.startsWith("https://sr.wikipedia.org/w/index.php?title") || adresa.startsWith("https://sr.wikipedia.org/wiki/en:"))
+			{
+				System.out.println("Naleteli smo na praznu stranu wikipedije.");
+				continue;
+			}
 			marked.add(adresa);
-			System.out.println("Dodat je sajt: "+ adresa);
-			kju.add(adresa);
+			
+			
+
+			
+			
+			boolean klasican_inc_id = true;
+			for(int i = 0;i<unique.size();i++)
+			{
+				if(adresa.equals(unique.get(i).getURL()))
+				{
+					temp_id = unique.get(i).getRbr();
+					klasican_inc_id = false;
+				}
+			}
+			
+			Element novi = new Element(adresa);
+			
+			
+			
+			novi.setPripadnost(curr.getRbr());
+			if(klasican_inc_id)
+			{
+				novi.setRbr(id);
+				id++;				
+				unique.add(novi);
+				kju.add(novi);
+				System.out.println("Dodat je stranica u listu krolovanja: "+ adresa);
+			}
+			else
+			{
+				novi.setRbr(temp_id);
+				if(curr.exists_in_list(temp_id)) continue; //preskakanje duplikata unutar jedne stranice
+				
+				System.out.println("Pojavio se vec poznat: "+novi.getRbr());
+				
+			}
+			
+			
+	
+			
+			curr.append(novi.getRbr());
+						
 		}
 		
+		
+		
+		curr.saveElement();
+		
+		if(unique.size()>100000)
+		{
+			System.out.println("100000 razlicitih ocitanih i sacuvanih stranica.");
+			return;
+		}
 	}
 
 	
 }
 	
 	
-/*	public static void algoritam(String root) throws IOException
-	{
-		kju.add(root);
-		BufferedReader br = null;
-		
-		while(!kju.isEmpty())
-		{
-			String crawledURL = kju.poll();
-			System.out.println("Iskrolovana stranica : " + crawledURL + "----------");
-			
-			if(marked.size()>250) return;
-			
-			boolean ok = false ;
-			URL url = null;
-			
-			
-			while(!ok)
-			{
-				try 
-				{
-					url = new URL(crawledURL);
-					br = new BufferedReader(new InputStreamReader(url.openStream()));
-					ok = true;
-				}
-				catch (MalformedURLException e)
-				{
-					System.out.println("Lose formiran url."+ crawledURL);
-					crawledURL = kju.poll();
-					ok = false;
-				}
-				catch (IOException ioe)
-				{
-					System.out.println("IOException url url." + crawledURL);
-					crawledURL = kju.poll();
-					ok = false;
-					
-				}
-			}
-			String tmp = null;
-			StringBuilder sb = new StringBuilder();
-			while(( tmp = br.readLine())!=null)
-				sb.append(tmp);
-			
-			tmp = sb.toString();
-			
-			Pattern pattern = Pattern.compile(regex);
-			Matcher matcher = pattern.matcher(tmp);
-			
-			while(matcher.find())
-			{
-				String w = matcher.group();
-				if(!marked.contains(w))
-				{
-					marked.add(w);
-					System.out.println("Dodat je sajt: "+"https://sr.wikipedia.org/"+w);
-					kju.add("https://sr.wikipedia.org/"+w);
-				}
-			}
-			
-		if(br!=null)
-		{br.close();}
-		}
-	
-	}
-
-	public static void Show()
-	{
-		
-		System.out.println("Rezultati: ");
-		System.out.println("Krolovani sajtovi: "+marked.size()+"\n");
-		
-		for(String s : marked)
-		{
-			System.out.println("--- " + s + "\n");
-		}
-		
-	}
-*/
 }

@@ -1,8 +1,11 @@
 package utils;
 
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 public class SaveTest {
    
@@ -13,7 +16,7 @@ public class SaveTest {
 	public static void kreiraj()
 	{
 		try {
-			out =  new BufferedWriter(new FileWriter("fajl.txt"));
+			out =  new BufferedWriter(new FileWriter("test.txt"));
 		} catch (IOException e) {
 			System.out.println("null kreiranje upisnog fajla: ");
 			e.printStackTrace();
@@ -29,19 +32,13 @@ public class SaveTest {
 			return;
 		
 		try {
-			out.write(s + "\n");
+			out.write(s);
 		} catch (IOException e) {
 			System.out.println("null upisivanje fajla: ");
 			e.printStackTrace();
 		}
 	}
 	
-   
-   
-   
-   
-   
-   
    
    
    
