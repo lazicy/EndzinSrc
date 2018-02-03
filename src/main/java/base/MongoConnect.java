@@ -13,8 +13,8 @@ public class MongoConnect {
 	
 	public MongoConnect() {
 		
-		MongoClient milan = new MongoClient();
-		db = milan.getDB("projekat");
+		MongoClient roki = new MongoClient();
+		db = roki.getDB("projekat");
 		coll = db.getCollection("test");
 		
 	}
