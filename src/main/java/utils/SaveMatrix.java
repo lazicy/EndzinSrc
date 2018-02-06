@@ -39,7 +39,7 @@ public class SaveMatrix implements Serializable{
 			e.printStackTrace();
 		
 		}
-		System.out.println("Matrix saved as: " + filename + ".ha");
+		System.out.println("Matrix saved at: " + filename + ".ha");
 	}
 	
 	public PageRank openMatrix(String loc) {

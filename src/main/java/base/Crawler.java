@@ -1,6 +1,8 @@
 package base;
 
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -30,9 +32,16 @@ public class Crawler {
 			mongo = new MongoConnect();
 			
 			
-			algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
+			//algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
 			//base.PageRank.makeConnectionMatrix(mongo.coll);
-		
+			double[][] H = base.PageRank.opetConnectionMatrix("D:\\mongodb\\matrix.ha");
+			for (int i = 0; i < H.length; i++) {
+				double sum = 0.0;
+				for (int j = 0; j < H.length; j++) {
+					sum += H[j][i];
+				}
+				System.out.println("Sum [" + i + "] = " + sum );
+			}
 	}
 	
 	
@@ -192,9 +201,12 @@ public class Crawler {
 						
 		}
 		
-		
+	
 		
 		curr.saveElement();
+		
+		
+			
 		
 		if(curr.getRbr()>100000)
 		{

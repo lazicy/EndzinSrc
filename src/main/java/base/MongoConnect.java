@@ -17,7 +17,7 @@ public class MongoConnect {
 		
 		MongoClient roki = new MongoClient();
 		db = roki.getDB("projekat");
-		coll = db.getCollection("test");
+		coll = db.getCollection("test2");
 		
 	}
 	

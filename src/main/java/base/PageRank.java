@@ -45,8 +45,10 @@ public class PageRank  implements Serializable{
 	
 	public static void makeConnectionMatrix(DBCollection coll) {
 		DBCursor cursor =  coll.find();
-		int n = cursor.count();
-		//int n = 10000;
+		//int n = cursor.count();
+		int n = 10500;
+		System.out.println("N[CursorCount] = " + n);
+		
 		DBObject query;
 		double matrix[][] = new double[n][n];
 		
@@ -58,7 +60,7 @@ public class PageRank  implements Serializable{
 		
 		double[] provera = new double[n];
 		int i = 0;
-		while(usersCursor.hasNext() && i < 10000) {
+		while(usersCursor.hasNext() && i < n) {
 			
 			ArrayList<Integer> vodiNaList = (ArrayList<Integer>) usersCursor.next().get("vodiNa");
 			ArrayList<Integer> list = new ArrayList<>();
@@ -114,16 +116,39 @@ public class PageRank  implements Serializable{
 		
 		System.out.println("provera[921]" + provera[921] );
 		
+		/*System.out.println("provera[12000]" + provera[12000] );
 		
+		System.out.println("provera[13405]" + provera[13405] );
 		
-	
+		System.out.println("provera[14236]" + provera[14236] );
 		
+		System.out.println("provera[15936]" + provera[15936] );
 		
+		System.out.println("provera[15936]" + provera[15936] );
+		
+		System.out.println("provera[16854]" + provera[16854] );
+		
+		System.out.println("provera[17213]" + provera[17213] );
+		
+		System.out.println("provera[21213]" + provera[21213] );
+		
+		System.out.println("provera[22213]" + provera[22213] );
+		
+		System.out.println("provera[30513]" + provera[30513] );
+		
+		System.out.println("provera[32514]" + provera[32514] );
+		
+		System.out.println("provera[5]" + provera[5] );
+		
+		System.out.println("provera[34568]" + provera[34568] );
+		
+		System.out.println("provera[36000]" + provera[36000] );
+		*/
 		PageRank p = new PageRank();
 		p.setH(matrix);
 		
 		SaveMatrix s = new SaveMatrix();
-		s.saveMatrix(p, "matrix");
+		s.saveMatrix(p, "D:\\mongodb\\matrix");
 		
 		//print2D(matrix);
 		
