@@ -4,12 +4,14 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 
 public class MongoConnect {
 	
-	private DB db;
-	private static DBCollection coll;
+	public DB db;
+	public static DBCollection coll;
 	
 	public MongoConnect() {
 		
@@ -32,6 +34,18 @@ public class MongoConnect {
 		coll.insert(doc);
 	}
 	
+	public boolean existsinDB(String title) {
+		  DBObject query = new BasicDBObject("naslov", title);
+		  DBCursor result = coll.find(query);
+		  if (result.size() != 0 ) {
+			  System.out.println("Exists!");
+			  return true;
+		  } else {
+			  System.out.println("Does not exist!");
+			  return false;
+		  }
+		  
+	}
 
 
 }

@@ -19,6 +19,7 @@ public class Crawler {
 	public static String regex = "/wiki/(.+?)\"";
 	public static int id;
 	public static int temp_id;
+	public static MongoConnect mongo;
 	
 	
 	public static List<Element> unique = new ArrayList<Element>();
@@ -26,9 +27,11 @@ public class Crawler {
 	public static void main(String[] args) 
 	{
 			//utils.SaveTest.kreiraj();
-			MongoConnect mongo = new MongoConnect();
-			algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
+			mongo = new MongoConnect();
 			
+			
+			algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
+			//base.PageRank.makeConnectionMatrix(mongo.coll);
 		
 	}
 	
@@ -80,7 +83,7 @@ public class Crawler {
 		Element curr = kju.poll();
 		String crawledURL = curr.getURL(); 				
 		
-		System.out.println("* * * Kroluje se stranica : " + crawledURL + ", izronjena iz " + Integer.toString(curr.getPripadnost()));
+		System.out.println("* * * Kroluje se stranica : " + curr.getRbr() + crawledURL + ", izronjena iz " + Integer.toString(curr.getPripadnost()));
 
 		
 		
@@ -108,9 +111,16 @@ public class Crawler {
 		
 		String retval[];
 		retval = base.Scrapper.daj_html(crawledURL);
+		
+		/*if (mongo.existsinDB(retval[0])) {
+			System.out.println("ID: " + id);
+			--id;
+			continue;
+		}*/
+		
+		
 		curr.setNaziv(retval[0]);
 		curr.setOpis(retval[1]);
-		
 		
 		
 
@@ -186,7 +196,7 @@ public class Crawler {
 		
 		curr.saveElement();
 		
-		if(unique.size()>100000)
+		if(curr.getRbr()>100000)
 		{
 			System.out.println("100000 razlicitih ocitanih i sacuvanih stranica.");
 			return;
