@@ -21,7 +21,7 @@ public class Scrapper {
 		String retval[] = {null,null,null};
 		
 		try {
-			Document doc = Jsoup.connect(source).timeout(60*5*1000).get();
+			Document doc = Jsoup.connect(source).timeout(5*60*1000).get();
 			Elements cont_temp = doc.select("div.mw-content-ltr");
 			Elements head_temp = doc.select("h1.firstHeading");
 			

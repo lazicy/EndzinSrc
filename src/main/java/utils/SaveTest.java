@@ -1,42 +1,42 @@
 package utils;
 
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 public class SaveTest {
    
    
-   private static BufferedWriter out;
+   private static PrintWriter writer = null;
 	
 	
-	public static void kreiraj()
-	{
+    public SaveTest() {
+    	
 		try {
-			out =  new BufferedWriter(new FileWriter("test.txt"));
-		} catch (IOException e) {
-			System.out.println("null kreiranje upisnog fajla: ");
+			writer = new PrintWriter("query.txt", "UTF-8");
+		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+    }
+   
+   
+	
 	
 
 	
 	
-	public static void upisi(String s)
+	public void upisi(String s) throws IOException
 	{
-		if(out==null)
-			return;
+		System.out.println(s);
 		
-		try {
-			out.write(s);
-		} catch (IOException e) {
-			System.out.println("null upisivanje fajla: ");
-			e.printStackTrace();
-		}
+		writer.write(s);
 	}
 	
    

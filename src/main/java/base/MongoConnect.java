@@ -13,12 +13,12 @@ public class MongoConnect {
 	public DB db;
 	public static DBCollection coll;
 	
-	public MongoConnect() {
+	public MongoConnect(String dbName, String collName) throws InterruptedException {
 		
-		MongoClient roki = new MongoClient();
-		db = roki.getDB("projekat");
-		coll = db.getCollection("test2");
-		
+		MongoClient cl = new MongoClient();
+		db = cl.getDB(dbName);
+		coll = db.getCollection(collName);
+		Thread.sleep(3000);
 	}
 	
 	public static void insertIntoMongo(int rbr, String title, String desc, String url, int pripadnost, BasicDBList vodiNa) {
@@ -45,6 +45,12 @@ public class MongoConnect {
 			  return false;
 		  }
 		  
+	}
+	
+	public int numberOfElementsinBase() {
+		DBCursor result = coll.find();
+		return result.size();
+		
 	}
 
 

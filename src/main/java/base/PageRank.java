@@ -6,51 +6,97 @@ package base;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 
-import utils.SaveMatrix;
+import utils.SaveOpen;
 
 public class PageRank  implements Serializable{
 	
-	private double H[][];
+	private static float H[][];
+	private static float A[][];
+	private static float I[][];
+	private static float p;
+	private static float pocetniUslovi[];
+	private static float b[];
+	private static float x[];
+	final private static float d = (float) 0.85;
+	private List<SortedPageRank> pageRank = new ArrayList<SortedPageRank>();
 	
+	public static int n; //ideja je bila n = cursor.count(); ali outOfMemoryExeption
 	
-	public PageRank() {
+	public PageRank(DBCollection coll, String loc, int no) {
+		n = no;
+		makeHMatrix(coll);
+		 
+		 saveHMatrix(loc + "H");
+		// H = openHMatrix("D:\\mongodb\\H.ha");
 		
-	}
-	
-	public static void printAll(DBCollection coll) {
-		DBCursor cursor =  coll.find();
-		try {
-			while(cursor.hasNext()) 
-		       System.out.println(cursor.next());
-		    
-		} finally {
-		   
+		checkCollSum(H);
+		 
+		
+		makeOtherMatrixs();
+	    System.out.println("Is matrix a diagonally dominant: " + isDiagonallyDominant(A));
+		
+		
+		 
+		x = methods.Jakobi.racunaj(A, b, pocetniUslovi, 1000, (float)0.000001);
+		
+		
+		for (int i = 0; i < x.length; i++) {
+		    pageRank.add(new SortedPageRank(i, (int)(100000000*x[i])));
 		}
 		
+		Collections.sort(pageRank);
+		Collections.reverse(pageRank);
+				
+		saveSortedPageRank(pageRank, loc + "pageRank");
+		
+	
+		
 	}
 	
-	public static double[][] opetConnectionMatrix(String loc) {
-		PageRank o = new PageRank();
-		SaveMatrix s = new SaveMatrix();
-		o = s.openMatrix(loc); 
-		return o.H;
+	
+	
+	public static float[][] openHMatrix(String loc) {
+		System.out.println("Opening H matrix from following location: " + loc);
+		SaveOpen s = new SaveOpen();
+		return s.openMatrix(loc); 
 	}
 	
-	public static void makeConnectionMatrix(DBCollection coll) {
-		DBCursor cursor =  coll.find();
-		//int n = cursor.count();
-		int n = 10500;
+	public static void saveHMatrix(String loc) {
+		System.out.println("Saving H matrix to following location: " + loc + ".ha");
+		SaveOpen s = new SaveOpen();
+		s.saveMatrix(H, loc);
+	}
+	
+	public static List<SortedPageRank> openSortedPageRank(String loc) {
+		System.out.println("Opening PageRank object from following location: " + loc);
+		SaveOpen s = new SaveOpen();
+		return s.openSortedPageRank(loc); 
+	}
+	
+	public static void saveSortedPageRank(List<SortedPageRank> o, String loc) {
+		System.out.println("Saving PageRank object from following location: " + loc + ".pr");
+		SaveOpen s = new SaveOpen();
+		s.saveSortedPageRank(o, loc);
+	}
+	
+	
+	public void makeHMatrix(DBCollection coll) {
+		DBCursor cursor;
+		
+		
 		System.out.println("N[CursorCount] = " + n);
 		
-		DBObject query;
-		double matrix[][] = new double[n][n];
+		
+		//float matrix[][] = new float[n][n];
+		H = new float[n][n];
+		
 		
 		BasicDBObject keys = new BasicDBObject();
 		
@@ -58,114 +104,190 @@ public class PageRank  implements Serializable{
 		keys.put("_id", false);
 		final DBCursor usersCursor = coll.find(new BasicDBObject(), keys);
 		
-		double[] provera = new double[n];
-		int i = 0;
-		while(usersCursor.hasNext() && i < n) {
+		
+		
+		
+		// Ideja optimizacije je da se prolazi prvo po kolonama kako bi se u jednom prolazu izracunavala C matrica (jedinica)
+		// i potom prepravljala u H matricu (suma po kolonoma mora biti 1 - provera pomocu checkCollSum() metode )
+		long start = System.currentTimeMillis();
+		for (int i =0; i<n; i++) {
 			
 			ArrayList<Integer> vodiNaList = (ArrayList<Integer>) usersCursor.next().get("vodiNa");
 			ArrayList<Integer> list = new ArrayList<>();
-			long start = System.currentTimeMillis();
-			double sum = 0;
+			
+			
+			// Unutar ove petlje prolazi se po kolonama i belezi se konekcija izmedju stranica tako sto se dodeljuje 1 
 			for (int j = 0; j < n; j++) {
-				//System.out.println("i: "+ i + " \\ j: " + j);
+				
 				
 				if (vodiNaList.contains(j)) {
-					sum += 1;
-					matrix[j][i] = 1;
+					
+					H[i][j] = 1;
 					list.add(j);
+					
 				}
 				
 				
 			}
-			double pr = 0;
-			for (int k : list) {
-				//System.out.println("Lista[" + k + "]= " + list.get(k));
-				
-				matrix[k][i] = 1.00/sum;
-				pr += matrix[k][i];
-				
-			
-			}
-			provera[i] = pr;
-			long end = System.currentTimeMillis();
-			System.out.println("Time consumed [" + i + "] iteration: " + (end-start));
-			System.out.println("List size: " + list.size() + " || 1/Suma: " + (1.0/sum));
-			
-			++i;
-			
-			
+			if (i % 1000 ==0 )
+				System.out.println("C LOOP: i: "+ i);
 		}
+		System.out.println("C done.");
 		
-		System.out.println("provera[0]" + provera[0] );
 		
-		System.out.println("provera[23]" + provera[23] );
 		
-		System.out.println("provera[28]" + provera[28] );
+		int sum;
+		for (int i = 0; i < n; i++) {
+			sum = 0;
+			for (int j = 0; j < n; j++) {
+				sum += H[j][i];
+				//System.out.println("H Loop 1 : i: "+ i + " \\ j: " + j);
+			}
+			for (int j = 0; j < n; j++) {
+				if (H[j][i] == 1)
+					H[j][i] = (float)1.0/sum;
+				//System.out.println("H Loop 2 : i: "+ i + " \\ j: " + j);
+			}
+			if (i % 1000 ==0 )
+				System.out.println("H LOOP: i: "+ i);
+		}
+		System.out.println("H done.");
 		
-		System.out.println("provera[100]" + provera[28] );
-		
-		System.out.println("provera[205]" + provera[28] );
-		
-		System.out.println("provera[354]" + provera[28] );
-		
-		System.out.println("provera[499]" + provera[28] );
-		
-		System.out.println("provera[528]" + provera[528] );
-		
-		System.out.println("provera[913]" + provera[913] );
-		
-		System.out.println("provera[921]" + provera[921] );
-		
-		/*System.out.println("provera[12000]" + provera[12000] );
-		
-		System.out.println("provera[13405]" + provera[13405] );
-		
-		System.out.println("provera[14236]" + provera[14236] );
-		
-		System.out.println("provera[15936]" + provera[15936] );
-		
-		System.out.println("provera[15936]" + provera[15936] );
-		
-		System.out.println("provera[16854]" + provera[16854] );
-		
-		System.out.println("provera[17213]" + provera[17213] );
-		
-		System.out.println("provera[21213]" + provera[21213] );
-		
-		System.out.println("provera[22213]" + provera[22213] );
-		
-		System.out.println("provera[30513]" + provera[30513] );
-		
-		System.out.println("provera[32514]" + provera[32514] );
-		
-		System.out.println("provera[5]" + provera[5] );
-		
-		System.out.println("provera[34568]" + provera[34568] );
-		
-		System.out.println("provera[36000]" + provera[36000] );
-		*/
-		PageRank p = new PageRank();
-		p.setH(matrix);
-		
-		SaveMatrix s = new SaveMatrix();
-		s.saveMatrix(p, "D:\\mongodb\\matrix");
-		
-		//print2D(matrix);
+
+		long end = System.currentTimeMillis();
+		System.out.println("Time consumed for H matrix of " + n + " dimension: " + (end-start) + " ms.");
+		//setH(matrix);
 		
 		
 		
 		//System.out.println(Arrays.deepToString(matrix));
 	}
 		
+	
+	public void makeOtherMatrixs(){
+		p = (float)1.00000/ n;
+		pocetniUslovi = new float[n];
+		b = new float[n];
+		I = new float[n][n];
+		A = new float[n][n];
+		System.out.println("Making A and b matrixs...");
+		long start = System.currentTimeMillis();
+		for(int i = 0; i< n ;i++) {
+			
+			pocetniUslovi[i] = 0;
+			b[i] = (1 - d)*p;
+			for(int j = 0; j< n;j++)
+			{
+				if(i==j) I[i][j] = 1;
+				else I[i][j] = 0;
+				
+				A[i][j] = I[i][j] - d*H[i][j];
+				//System.out.println("A["+ i + "][" + j + "] = " + A[i][j]);
+			}
+	
+		}
+		long end = System.currentTimeMillis();
+		System.out.println("DONE with makeOtherMatrixs();");
+		System.out.println("Time consumed makeOtherMatrixs: " + (end-start) + " ms.");
+	}
+	
 		
-	 public static void print2D(double mat[][]){
+	 public static void print2D(float H[][]){
 	       
-	        for (double[] row : mat)
+	        for (float[] row : H)
 	            System.out.println(Arrays.toString(row));
 	 }
 	 
-	 private void setH(double mat[][]) {
+	 public void setH(float mat[][]) {
 		 this.H = mat;
 	 }
+	 
+	 public float[][] getH(){
+		 
+		 return this.H;
+	 }
+	
+	 public void initI(){
+		
+			
+	 }
+		
+	 
+	 
+	 public static void checkCollSum(float H[][]) {
+		 int flag = 0;
+		 System.out.println("Checking column sums..." );
+		 for (int i = 0; i < H.length; i++) {
+				float sum = 0;
+				for (int j = 0; j < H.length; j++) {
+					sum += H[j][i];
+					
+				}
+				//System.out.println("Sum [" + i + "] = " + sum );
+				if ( sum < 0.99992 || sum > 1.00001) {
+					System.out.println("Irregular sum of [" + i + "] column!" );
+					flag = 1;
+				}
+					
+		}
+		 
+		 if (flag == 0)
+			 System.out.println("Sum of H matrix columns is just fine!");
+		 else 
+			 System.err.println("Sum of H matrix columns is corrupted! H matrix not well built. Again prick.");
+	 }
+	 
+	 
+	 public static void printPageRankObject(List<SortedPageRank> o) {
+		 for (SortedPageRank element : o) {
+			    System.out.println("Value: " + element.value + " --- RBR: " + element.rbr);
+			}
+		 
+	 }
+	 
+	 public static void printAll(DBCollection coll) {
+			DBCursor cursor =  coll.find();
+			try {
+				while(cursor.hasNext()) 
+			       System.out.println(cursor.next());
+			    
+			} finally {
+			   
+			}
+			
+	}
+	 
+	 public List<SortedPageRank> getPageRank(){
+		 
+		 return pageRank;
+	 }
+	 
+	 public boolean isDiagonallyDominant(float[][] array) {
+		    int otherTotal = 0;
+
+		    // Loop through every row in the array
+		    for(int row = 0; row < array.length; row++) {
+		        otherTotal = 0;
+
+		        // Loop through every element in the row
+		        for(int column = 0; column < array[row].length; column++) {
+
+		            // If this element is NOT on the diagonal
+		            if(column != row) {
+
+		                // Add it to the running total
+		                otherTotal += Math.abs(array[row][column]);
+		            }
+		        }
+
+		        // If this diagonal element is LESS than the sum of the other ones...
+		        if(Math.abs(array[row][row]) < otherTotal) {
+
+		            // then the array isn't diagonally dominant and we can return.
+		            return false;
+		        }
+		    }
+		    return true;
+		}
 
 }

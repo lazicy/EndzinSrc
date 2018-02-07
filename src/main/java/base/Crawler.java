@@ -1,8 +1,6 @@
 package base;
 
 
-import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -25,28 +23,25 @@ public class Crawler {
 	
 	
 	public static List<Element> unique = new ArrayList<Element>();
-	
-	public static void main(String[] args) 
+	/*
+	public static void main(String[] args) throws InterruptedException 
 	{
 			//utils.SaveTest.kreiraj();
-			mongo = new MongoConnect();
+			//mongo = new MongoConnect();
 			
 			
-			//algoritam("https://sr.wikipedia.org/wiki/%D0%9C%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
-			//base.PageRank.makeConnectionMatrix(mongo.coll);
-			double[][] H = base.PageRank.opetConnectionMatrix("D:\\mongodb\\matrix.ha");
-			for (int i = 0; i < H.length; i++) {
-				double sum = 0.0;
-				for (int j = 0; j < H.length; j++) {
-					sum += H[j][i];
-				}
-				System.out.println("Sum [" + i + "] = " + sum );
-			}
+			//algoritam("https://sr.wikipedia.org/wiki/%D0%9D%D1%83%D0%BC%D0%B5%D1%80%D0%B8%D1%87%D0%BA%D0%B0_%D0%BC%D0%B0%D1%82%D0%B5%D0%BC%D0%B0%D1%82%D0%B8%D0%BA%D0%B0"); //ubaciti pocetnu adresu krolovanja
+			//base.PageRank.makeHMatrix(mongo.coll);
+			//double[][] H = base.PageRank.openHMatrix("D:\\mongodb\\matrix.ha");
+			//base.PageRank.checkCollSum(H);
+			
+			
+			PageRank pr = new PageRank(mongo.coll);
 	}
 	
+	*/
 	
-	
-	public static void algoritam(String root) 
+	public static void algoritam(String root, int n) 
 	{
 	
 	Element start = new Element(root); //inicijalizacija roota
@@ -208,9 +203,9 @@ public class Crawler {
 		
 			
 		
-		if(curr.getRbr()>100000)
+		if(curr.getRbr()>n)
 		{
-			System.out.println("100000 razlicitih ocitanih i sacuvanih stranica.");
+			System.out.println("Done. Crawled " + n + " pages.");
 			return;
 		}
 	}
