@@ -87,7 +87,7 @@ public class Crawler {
 		Element curr = kju.poll();
 		String crawledURL = curr.getURL(); 				
 		
-		System.out.println("* * * Kroluje se stranica : " + curr.getRbr() + crawledURL + ", izronjena iz " + Integer.toString(curr.getPripadnost()));
+		System.out.println("Kroluje se stranica: " + curr.getRbr()+ " izronjena iz " + Integer.toString(curr.getPripadnost()));
 
 		
 		
@@ -178,14 +178,14 @@ public class Crawler {
 				id++;				
 				unique.add(novi);
 				kju.add(novi);
-				System.out.println("Dodat je stranica u listu krolovanja: "+ adresa);
+				//System.out.println("Dodat je stranica u listu krolovanja: "+ adresa);
 			}
 			else
 			{
 				novi.setRbr(temp_id);
 				if(curr.exists_in_list(temp_id)) continue; //preskakanje duplikata unutar jedne stranice
 				
-				System.out.println("Pojavio se vec poznat: "+novi.getRbr());
+				//System.out.println("Pojavio se vec poznat: "+novi.getRbr());
 				
 			}
 			

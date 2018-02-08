@@ -6,8 +6,6 @@ import javax.swing.plaf.synth.SynthSpinnerUI;
 
 public class Jakobi {
 
-	
-	 
 	 public static float[] racunaj(float[][] A, float[] b, float[] x0, int itMax, float errMax) {
 		 int n = b.length;
 		 float[] x = new float[n];
@@ -37,12 +35,7 @@ public class Jakobi {
 				return x;
 		}
 		 
-		 
-		 
-		 
-		 return x;
-		 
+		 return x; 
 	 }
-	
 	
 }

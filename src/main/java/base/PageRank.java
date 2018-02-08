@@ -107,8 +107,6 @@ public class PageRank  implements Serializable{
 		
 		
 		
-		// Ideja optimizacije je da se prolazi prvo po kolonama kako bi se u jednom prolazu izracunavala C matrica (jedinica)
-		// i potom prepravljala u H matricu (suma po kolonoma mora biti 1 - provera pomocu checkCollSum() metode )
 		long start = System.currentTimeMillis();
 		for (int i =0; i<n; i++) {
 			
@@ -116,25 +114,20 @@ public class PageRank  implements Serializable{
 			ArrayList<Integer> list = new ArrayList<>();
 			
 			
-			// Unutar ove petlje prolazi se po kolonama i belezi se konekcija izmedju stranica tako sto se dodeljuje 1 
+			
 			for (int j = 0; j < n; j++) {
-				
 				
 				if (vodiNaList.contains(j)) {
 					
 					H[i][j] = 1;
 					list.add(j);
-					
 				}
-				
 				
 			}
 			if (i % 1000 ==0 )
 				System.out.println("C LOOP: i: "+ i);
 		}
 		System.out.println("C done.");
-		
-		
 		
 		int sum;
 		for (int i = 0; i < n; i++) {
